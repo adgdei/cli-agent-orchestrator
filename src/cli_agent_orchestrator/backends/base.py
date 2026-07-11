@@ -238,6 +238,15 @@ class TerminalBackend(ABC):
         """
         ...
 
+    @abstractmethod
+    def prepare_web_attach(self, session_name: str, window_name: str) -> List[str]:
+        """Prepare a browser PTY attachment and return its subprocess argv.
+
+        Backends may perform routing work before returning, such as focusing a
+        Herdr workspace/tab. The caller owns the PTY and subprocess lifecycle.
+        """
+        ...
+
     # --- Pipe-pane (logging) ---
 
     @abstractmethod

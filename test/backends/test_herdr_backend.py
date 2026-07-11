@@ -116,6 +116,22 @@ class TestHerdrBackendCommands:
         assert result[1]["name"] == "cao-proj2"
 
     @patch("subprocess.run")
+    def test_prepare_web_attach_focuses_tab_and_returns_herdr_command(self, mock_run, backend):
+        """Browser attachment focuses the requested Herdr tab before opening its TUI."""
+        ws = [{"label": "cao-test", "workspace_id": "w1"}]
+        tabs = [{"tab_id": "tab-1", "workspace_id": "w1", "label": "developer-abcd"}]
+        mock_run.side_effect = [
+            _completed(_make_workspace_list_response(ws)),
+            _completed(_make_tab_list_response(tabs)),
+            _completed(),
+        ]
+
+        command = backend.prepare_web_attach("cao-test", "developer-abcd")
+
+        assert command == ["herdr", "--session", "cao"]
+        assert mock_run.call_args_list[-1].args[0][-3:] == ["tab", "focus", "tab-1"]
+
+    @patch("subprocess.run")
     def test_create_session_calls_workspace_create(self, mock_run, backend):
         """create_session should call herdr workspace create with --label and inject env."""
         # Include root_pane.pane_id so _parse_new_pane_id succeeds and _inject_env_vars
