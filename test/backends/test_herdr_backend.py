@@ -131,6 +131,19 @@ class TestHerdrBackendCommands:
         assert command == ["herdr", "--session", "cao"]
         assert mock_run.call_args_list[-1].args[0][-3:] == ["tab", "focus", "tab-1"]
 
+    def test_prepare_web_attach_propagates_tab_not_found(self, backend):
+        """Browser attachment propagates a missing requested Herdr tab."""
+        error = TerminalNotFoundError("cao-test:missing-window")
+
+        with (
+            patch.object(backend, "_resolve_workspace_id", return_value="w1"),
+            patch.object(backend, "_resolve_tab_id", side_effect=error),
+            pytest.raises(TerminalNotFoundError) as exc_info,
+        ):
+            backend.prepare_web_attach("cao-test", "missing-window")
+
+        assert exc_info.value is error
+
     @patch("subprocess.run")
     def test_create_session_calls_workspace_create(self, mock_run, backend):
         """create_session should call herdr workspace create with --label and inject env."""

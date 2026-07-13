@@ -244,6 +244,16 @@ class TerminalBackend(ABC):
 
         Backends may perform routing work before returning, such as focusing a
         Herdr workspace/tab. The caller owns the PTY and subprocess lifecycle.
+
+        Args:
+            session_name: Target session
+            window_name: Target window
+
+        Returns:
+            Subprocess argv for the interactive backend client
+
+        Raises:
+            TerminalBackendError: If the backend cannot prepare the attachment
         """
         ...
 

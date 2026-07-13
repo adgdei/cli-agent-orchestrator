@@ -1895,6 +1895,7 @@ async def terminal_ws(websocket: WebSocket, terminal_id: str):
     # or future code paths could still bypass that, and tmux parses
     # ':' / '.' as target delimiters. Bind the validator return values
     # so the sanitization is explicit at the actual sink below.
+    # This tmux-shaped validation is deliberately applied to every backend.
     try:
         session_name = validate_tmux_name(metadata["tmux_session"], "session_name")
         window_name = validate_tmux_name(metadata["tmux_window"], "window_name")
@@ -1903,9 +1904,12 @@ async def terminal_ws(websocket: WebSocket, terminal_id: str):
         return
 
     try:
-        attach_command = get_backend().prepare_web_attach(session_name, window_name)
+        attach_command = await asyncio.to_thread(
+            get_backend().prepare_web_attach, session_name, window_name
+        )
     except TerminalBackendError as e:
-        await websocket.close(code=4004, reason=str(e))
+        logger.error(f"Web attach failed for terminal {terminal_id}: {e}")
+        await websocket.close(code=4004, reason="Failed to attach terminal")
         return
 
     # Create PTY pair for backend attach
